@@ -87,30 +87,16 @@ include_once 'category.php';
 
 
 			// get butget category_id
-			if ( !empty( $this->category ) ){
-			
-				$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
-				$category 		= new Category( $db, $category_name );
-				$stmt 			= $category->readOne();
-				$res 			= $stmt->fetch();
+			$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
+			$category 		= new Category( $db, $category_name );
+			$category_id	= $category->getCategoryId();
 
-				if ( $res && $res['name'] == $category_name) {
-
-					$category_id = $res['id'];
-
-				} else {
-
-					$category_id = 8; // Other works.
-				}
-
-			}
-
-			$status_id	= 3;
+			// pending status by default
+			$status_id	= 1;	
 			$created 	= date('Y-m-d H:i:s');
 
 			// insert new budget
-			$query2 = "INSERT INTO {$this->table_name} 
-			          	SET 
+			$query2 = "INSERT INTO {$this->table_name} SET 
 			          		title=:title, 
 			          		description=:description, 
 			          		category_id=:category_id, 
@@ -147,6 +133,83 @@ include_once 'category.php';
 			}
 		
 		}
+
+		/**
+		 * UPDATE budget
+		 */
+		function update() {
+
+		// Check if budget is alowed to be modified.
+		$id 	= filter_var( $this->id, FILTER_VALIDATE_INT );
+		$budget = $this->readOne( $id );
+
+		if ( $budget && $budget['status_id'] == 1 ) {
+
+			// get butget category_id
+			$database 		= new Database();
+			$db 			= $database->getConnection();
+			$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
+			$category 		= new Category( $db, $category_name );
+			$category_id	= $category->getCategoryId();
+
+			// update query
+		        $query = "UPDATE {$this->table_name} SET
+		                    title 		= :title,
+		                    description = :description,
+		                    category_id = :category_id
+		                WHERE
+		                    id = :id";
+		      
+		        // prepare query statement
+		        $stmt = $this->conn->prepare($query);
+		      
+		        // sanitize
+			    $this->title 		= filter_var( $this->title, 		FILTER_SANITIZE_STRING );
+			    $this->description 	= filter_var( $this->description, 	FILTER_SANITIZE_STRING );
+		      
+		        // bind new values
+		        $stmt->bindParam( ':title', 		$this->title );
+		        $stmt->bindParam( ':description', 	$this->description );
+		        $stmt->bindParam( ':category_id', 	$category_id);
+		        $stmt->bindParam( ':id', 			$id );
+		      
+		        // execute the query
+		        if($stmt->execute()){
+		            return true;
+		        }
+		      
+		        return false;
+
+		} else { // No se puede editar el presu
+			return false;
+		}
+
+    }
+
+
+    	/**
+		 *  READ one budget
+		 */
+    	function readOne( $id ){
+      
+	        // query to read single record
+	        $query = " SELECT * FROM {$this->table_name} WHERE id = :id " ;
+	      
+	        // prepare query statement
+	        $stmt = $this->conn->prepare( $query );
+	      
+	        // bind budget id 
+	        $stmt->bindParam(":id", $this->id);
+	      
+	        // execute query
+	        if ($stmt->execute()) {
+	        	return $stmt->fetch();
+	        }
+
+	        return false;
+
+        }
+
 
 
 	}

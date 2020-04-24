@@ -43,6 +43,27 @@
 
         }
 
+        function getCategoryId(){
+
+        	if ( !empty( $this->name ) ){
+			
+				$stmt = $this->readOne();
+				$res  = $stmt->fetch();
+
+				if ( $res && $res['name'] == $this->name){
+
+					return $res['id'];
+
+				} 
+
+			} else {
+
+				return 8; // Other works.
+
+			}
+			
+        }
+
 
 
 	}
