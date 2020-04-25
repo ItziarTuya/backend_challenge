@@ -7,7 +7,7 @@ include_once 'category.php';
 
 		// database connection and table name
 	    private $conn;
-	    private $table_name = "budgets";
+	    private $table = "budgets";
 	  
 	    // object properties
 	    public $id;
@@ -33,7 +33,7 @@ include_once 'category.php';
 		  
 		    // select all query
 		    $query = " SELECT p.id, p.title, p.description, p.category_id, c.name as category_name, p.user_id, u.				name as user_name, p.status_id, s.name as status_name, p.created
-			            FROM {$this->table_name} p
+			            FROM {$this->table} p
 		                LEFT JOIN categories c 	ON p.category_id = c.id
 		                LEFT JOIN users u 		ON p.user_id = u.id
 		                LEFT JOIN status s 		ON p.status_id = s.id
@@ -95,7 +95,7 @@ include_once 'category.php';
 			$created 	= date('Y-m-d H:i:s');
 
 			// insert new budget
-			$query2 = "INSERT INTO {$this->table_name} SET 
+			$query2 = "INSERT INTO {$this->table} SET 
 			          		title=:title, 
 			          		description=:description, 
 			          		category_id=:category_id, 
@@ -138,7 +138,7 @@ include_once 'category.php';
 		 */
 		function update() {
 
-		// Check if budget is alowed to be modified.
+		// Check if budget exists and is alowed to be modified .
 		$id 	= filter_var( $this->id, FILTER_VALIDATE_INT );
 		$budget = $this->readOne( $id );
 
@@ -152,7 +152,7 @@ include_once 'category.php';
 			$category_id	= $category->getCategoryId();
 
 			// update query
-		        $query = "UPDATE {$this->table_name} SET
+		        $query = "UPDATE {$this->table} SET
 		                    title 		= :title,
 		                    description = :description,
 		                    category_id = :category_id
@@ -179,11 +179,12 @@ include_once 'category.php';
 		      
 		        return false;
 
-		} else { // No se puede editar el presu
-			return false;
-		}
+	        // The budget could not be updated.
+			} else { 
+				return false;
+			}
 
-    }
+	    }
 
 
     	/**
@@ -192,15 +193,16 @@ include_once 'category.php';
     	function readOne( $id ){
       
 	        // query to read single record
-	        $query = " SELECT * FROM {$this->table_name} WHERE id = :id " ;
+	        $query = " SELECT * FROM {$this->table} WHERE id = :id " ;
 	      
 	        // prepare query statement
 	        $stmt = $this->conn->prepare( $query );
-	      
+
 	        // bind budget id 
-	        $stmt->bindParam(":id", $this->id);
+	        $stmt->bindParam(":id", $id );
 	      
 	        // execute query
+
 	        if ($stmt->execute()) {
 	        	return $stmt->fetch();
 	        }
@@ -209,6 +211,41 @@ include_once 'category.php';
 
         }
 
+
+        /**
+         *  Post a pending budget request
+         */
+        function post(){
+
+			// check if budget exists and is alowed to be modified .
+			$id 		= filter_var( $this->id, FILTER_VALIDATE_INT );
+
+			$budget 	= $this->readOne( $id );
+			$published 	= 2;
+
+			if ( $budget 
+					&& $budget['status_id'] == 1
+					&& !empty( $budget['title'] )
+					&& !empty( $budget['description'] ) ) {
+
+				$query = " UPDATE {$this->table} SET
+								status_id = :status_id";
+
+				$stmt = $this->conn->prepare( $query );
+
+				$stmt->bindParam( ":status_id", $published );
+
+				if ( $stmt->execute() ){
+					return true;
+				}
+
+				return false;
+
+			// the budget does not meet the requirements to be published.
+			} else {
+				return false;
+			}
+        }
 
 
 	}
