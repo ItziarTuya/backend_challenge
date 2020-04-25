@@ -23,10 +23,10 @@
 	// set ID property of budget to be edited
 	$budget->id = $data->budget_id;
 	  
-	// set budget property values
-	$budget->title 			= $data->title;
-	$budget->description 	= $data->description;
-	$budget->category	 	= $data->category;
+	// set budget property optional values
+	$budget->title 			= !empty( $data->title ) ? $data->title : '';
+	$budget->description 	= !empty( $data->description ) ? $data->description : '';
+	$budget->category	 	= !empty( $data->category ) ? $data->category : '';
 	  
 	// update the budget
 	if( $budget->update() ){
