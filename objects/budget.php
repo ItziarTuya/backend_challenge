@@ -85,7 +85,6 @@ include_once 'category.php';
 
 			$user_id = $res['id'];
 
-
 			// get butget category_id
 			$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
 			$category 		= new Category( $db, $category_name );

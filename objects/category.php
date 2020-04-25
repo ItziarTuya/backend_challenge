@@ -26,7 +26,7 @@
 		 *  READ one category
 		 */
     	function readOne(){
-      
+
 	        // query to read single record
 	        $query = " SELECT * FROM {$this->table_name} WHERE name = :name " ;
 	      
@@ -37,36 +37,66 @@
 	        $stmt->bindParam(":name", $this->name);
 	      
 	        // execute query
-	        $stmt->execute();
+	        if ($stmt->execute()) {
 
-	        return $stmt;
+	        	return $stmt->fetch();
+	        }
+
+	        return false;
 
         }
 
         function getCategoryId(){
 
         	if ( !empty( $this->name ) ){
-			
-				$stmt = $this->readOne();
-				$res  = $stmt->fetch();
+
+				$res = $this->readOne();
 
 				if ( $res && $res['name'] == $this->name){
 
 					return $res['id'];
 
-				} 
+				} else{
+					// If the category is not empty or isn't on db, create new category.
+					if ( $this->create() ) {
+
+						$res = $this->readOne();
+						$id  = $res['id'];
+					
+						return 	$id;
+					}
+
+				}
 
 			} else {
 
 				return 8; // Other works.
 
 			}
-			
+
         }
 
 
+        public function create(){
+
+        	// query to insert record
+	        $query = " INSERT INTO {$this->table_name} SET name=:name, created=:created";
+	        
+	        // prepare query
+	        $stmt = $this->conn->prepare( $query );
+
+	        // bind values
+	        $stmt->bindParam( ":name", 		$this->name );
+	        $stmt->bindParam( ":created", 	$this->created );
+	      
+	        // execute query
+	        if($stmt->execute()){
+	            return true;
+	        }
+	      
+	        return false;
+          
+    	}
 
 	}
-
-
 ?>
