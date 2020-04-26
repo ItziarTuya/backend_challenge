@@ -2,17 +2,17 @@
 
     class Utilities{
       
-        public function getPaging($page, $total_rows, $records_per_page, $page_url){
+        public function getPaging( $page, $total_rows, $records_per_page, $page_url ){
       
             // paging array
             $paging_arr = array();
       
             // button for first page
-            $paging_arr["first"] = $page > 1 ? "{$page_url}page=1" : "Current page";
+            $paging_arr["first"] = $page > 1 ? "{$page_url}page=1" : "";
       
             // count all budgets in the database to calculate total pages
             $total_pages = ceil( $total_rows / $records_per_page );
-      
+
             // range of links to show
             $range = 2;
       
@@ -37,7 +37,7 @@
             }
       
             // button for last page
-            $paging_arr["last"] = $page < $total_pages ? "{$page_url}page={$total_pages}" : "Current page";
+            $paging_arr["last"] = $page < $total_pages ? "{$page_url}page={$total_pages}" : "";
       
             // json format
             return $paging_arr;

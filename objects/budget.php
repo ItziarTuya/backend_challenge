@@ -269,20 +269,20 @@ include_once 'category.php';
 		  
 		    // select all query
 		    $query = "SELECT 
-		    			p.id, 
-	    				p.title, 
-	    				p.description, 
-	    				p.category_id, 
+		    			b.id, 
+	    				b.title, 
+	    				b.description, 
+	    				b.category_id, 
 	    				c.name as category_name, 
-	    				p.user_id, 
+	    				b.user_id, 
 	    				u.email as user_email, 
-	    				p.status_id, 
+	    				b.status_id, 
 	    				s.name as status_name, 
-	    				p.created
-		            FROM {$this->table} p
-	                LEFT JOIN categories c 	ON p.category_id = c.id
-	                LEFT JOIN users u 		ON p.user_id = u.id
-	                LEFT JOIN status s 		ON p.status_id = s.id ";
+	    				b.created
+		            FROM {$this->table} b
+	                LEFT JOIN categories c 	ON b.category_id = c.id
+	                LEFT JOIN users u 		ON b.user_id = u.id
+	                LEFT JOIN status s 		ON b.status_id = s.id ";
 
 		    if ( isset( $this->email ) ) {
 
@@ -293,7 +293,7 @@ include_once 'category.php';
 
 				if ( $res ){
 
-		    		$query .= " WHERE p.user_id = :user_id ";
+		    		$query .= " WHERE b.user_id = :user_id ";
 	    		
 	    		// The email doesn't exist in db.
 	    		} else{
@@ -302,20 +302,16 @@ include_once 'category.php';
 	    		}
 		    }
 
-			$query .= " ORDER BY p.created DESC
-						LIMIT ?, ? ";
+			$query .= " ORDER BY b.created DESC
+						LIMIT $from_record_num, $records_per_page ";
 		  
 		    // prepare query statement
 		    $stmt = $this->conn->prepare( $query );
         
-        	// bind variable values
 		    if ( $res ){
 
 		    	$stmt->bindParam( ":user_id", $res["id"] );
 			}
-
-        	$stmt->bindParam(1, $from_record_num, PDO::PARAM_INT);
-        	$stmt->bindParam(2, $records_per_page, PDO::PARAM_INT);
 		  
 		    // execute query
 		    if ( $stmt->execute() ){
@@ -328,14 +324,27 @@ include_once 'category.php';
 
 
 	    // Count rows for paging budgets
-	    public function count(){
+	    public function count( $email = null){
 
 	        $query = "SELECT COUNT(*) as total_rows FROM {$this->table}";
 	      
+  		    if ( isset( $this->email ) ) {
+
+		    	$database 	= new Database();
+				$db 		= $database->getConnection();
+				$user 		= new User( $db );
+				$res 		= $user->readOne( filter_var( $this->email, FILTER_SANITIZE_EMAIL ) );
+
+				if ( $res ) $query .= " WHERE user_id = :user_id ";
+	    	}
+
 	        $stmt = $this->conn->prepare( $query );
+
+	        if ( $res ) $stmt->bindParam( ":user_id", $res["id"] );
+
 	        $stmt->execute();
 	        $row = $stmt->fetch(PDO::FETCH_ASSOC);
-	      
+
 	        return $row['total_rows'];
 	    }
 

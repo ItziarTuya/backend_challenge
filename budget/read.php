@@ -75,6 +75,6 @@
 	    http_response_code( 404 );
 	  
 	    // tell the user no budget found
-	    echo json_encode( array("message" => "No budget request hash(algo, data) been found.") );
+	    echo json_encode( array("message" => "No budget request has been found.") );
 
 	}
