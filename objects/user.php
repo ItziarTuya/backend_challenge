@@ -15,7 +15,7 @@
 	    public $modified;
 	  
 	    // constructor with $db as database connection
-	    public function __construct( $db, $params ){
+	    public function __construct( $db, $params = null ){
 	        
 	        $this->conn 	= $db;
 	        $this->email 	= $params['email'];
@@ -29,7 +29,7 @@
 		/**
 		 *  READ one user
 		 */
-    	function readOne(){
+    	function readOne( $email ){
       
 	        // query to read single record
 	        $query = " SELECT * FROM {$this->table_name} WHERE email = :email " ;
@@ -38,12 +38,19 @@
 	        $stmt = $this->conn->prepare( $query );
 	      
 	        // bind user email 
-	        $stmt->bindParam(":email", $this->email);
+	        $stmt->bindParam(":email", $email);
 	      
 	        // execute query
-	        $stmt->execute();
+	        if ( $stmt->execute() ) {
 
-	        return $stmt;
+	        	//var_dump($stmt->fetch());
+	        	//die();
+
+	        	return $stmt->fetch();
+
+	        }
+
+	        return false;
 
         }
 

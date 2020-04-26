@@ -22,7 +22,7 @@
 	// prepare object budget
 	$budget = new Budget($db);
 
-	// get id of budget to be edited
+	// get budget id to be edited
 	$data = json_decode( file_get_contents( "php://input" ) );
 
 	// set ID property of budget to be edited
