@@ -219,7 +219,6 @@ include_once 'category.php';
 
 			// check if budget exists and is alowed to be modified .
 			$id 		= filter_var( $this->id, FILTER_VALIDATE_INT );
-
 			$budget 	= $this->readOne( $id );
 			$published 	= 2;
 
@@ -229,11 +228,13 @@ include_once 'category.php';
 					&& !empty( $budget['description'] ) ) {
 
 				$query = " UPDATE {$this->table} SET
-								status_id = :status_id";
+								status_id = :status_id
+							WHERE id = :id " ;
 
 				$stmt = $this->conn->prepare( $query );
 
 				$stmt->bindParam( ":status_id", $published );
+				$stmt->bindParam( ':id', 		$id );
 
 				if ( $stmt->execute() ){
 					return true;
@@ -242,6 +243,40 @@ include_once 'category.php';
 				return false;
 
 			// the budget does not meet the requirements to be published.
+			} else {
+				return false;
+			}
+        }
+
+
+        /**
+         *  Discard a published or pending budget request
+         */
+        function discard(){
+
+			// check if budget exists and is alowed to be modified .
+			$id 		= filter_var( $this->id, FILTER_VALIDATE_INT );
+			$budget 	= $this->readOne( $id );
+			$discarded 	= 3;
+
+			if ( $budget && ( $budget['status_id'] != $discarded ) ) {
+
+				$query = " UPDATE {$this->table} SET
+								status_id = :status_id
+							WHERE id = :id " ;
+
+				$stmt = $this->conn->prepare( $query );
+
+				$stmt->bindParam( ":status_id", $discarded );
+				$stmt->bindParam( ':id', 		$id );
+
+				if ( $stmt->execute() ){
+					return true;
+				}
+
+				return false;
+
+			// the budget does not meet the requirements to be discarded.
 			} else {
 				return false;
 			}

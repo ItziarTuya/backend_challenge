@@ -81,6 +81,30 @@
 		    // tell the user
 		    echo json_encode(array("message" => "Unable to post budget."));
 		}
+
+	/**
+	 * Discard a budget request
+	 */
+	} elseif ( $action === "discard"){
+		
+		if( $budget->discard() ){
+		  
+		    // set response code - 200 ok
+		    http_response_code(200);
+		  
+		    // tell the user
+		    echo json_encode(array("message" => "The budget request has been discarded."));
+		}
+		  
+		// if unable to discard the budget, tell the user
+		else{
+		  
+		    // set response code - 503 service unavailable
+		    http_response_code(503);
+		  
+		    // tell the user
+		    echo json_encode(array("message" => "Unable to discard budget."));
+		}
 	}
 
 ?>
