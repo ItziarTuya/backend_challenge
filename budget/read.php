@@ -56,25 +56,18 @@
 
 	    }
 
-
         // include paging
 	    $total_rows 		= $budget->count();
 	    $page_url 			= "{$home_url}budget/read.php?";
 	    $paging 			= $utilities->getPaging( $page, $total_rows, $records_per_page, $page_url );
 	    $budgets["paging"] 	= $paging;
   
-	    // set response code - 200 OK
-	    http_response_code( 200 );
-	  
-	    // show budgets data in json format
-	    echo json_encode( $budgets );
+	    // 200 OK - show budgets data in json format
+	    $utilities->statusCodes( $_200, $budgets );
 
 	} else{
-  
-	    // set response code - 404 Not found
-	    http_response_code( 404 );
-	  
-	    // tell the user no budget found
-	    echo json_encode( array("message" => "No budget request has been found.") );
+  		
+  		// tell the user no budget found
+	    $utilities->statusCodes( $_404, array( "message" => "No budget request has been found.") );
 
 	}

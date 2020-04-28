@@ -106,7 +106,7 @@ include_once 'category.php';
 			     $this->conn->commit();
 			     echo "Consolidated transaction.<br />";
 			     return true;
-			     
+
 			} else {
 
 			     $this->conn->rollback();
@@ -331,8 +331,10 @@ include_once 'category.php';
 	    // Count rows for paging budgets
 	    public function count( $email = null){
 
+	    	
 	        $query = "SELECT COUNT(*) as total_rows FROM {$this->table}";
 	      
+	    	$res = false;
   		    if ( isset( $this->email ) ) {
 
 		    	$database 	= new Database();

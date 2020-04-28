@@ -42,6 +42,17 @@
             // json format
             return $paging_arr;
         }
+
+
+        public function statusCodes( $code, $message ) {
+
+            // set response code 
+            http_response_code( $code );
+
+            // tell the user whats going on
+            echo json_encode( $message );
+
+        }
       
     }
 ?>
