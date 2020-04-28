@@ -35,8 +35,9 @@ include_once 'category.php';
 			// instantiate database and user object
 			$database 	= new Database();
 			$db 		= $database->getConnection();
+			$email 		= filter_var( $this->email, FILTER_SANITIZE_EMAIL );
 			$params		= array (
-				'email' 	=> filter_var( $this->email, FILTER_SANITIZE_EMAIL ),
+				'email' 	=> $email,
 		    	'phone'		=> filter_var( $this->phone, FILTER_SANITIZE_STRING ),
 		    	'address'	=> filter_var( $this->address, FILTER_SANITIZE_STRING ) 
 		    );
@@ -51,21 +52,23 @@ include_once 'category.php';
 
 				// create new user
 				$stmt1 		= $user->create();
-				$stmt 		= $user->readOne();
-				$res    	= $stmt->fetch();
+				$stmt 		= $user->readOne( $email );
 
 			} else {
+				
 				// update old user
 				$stmt1 = $user->update( $res['id'] );
-
 			}
 
 			$user_id = $res['id'];
 
 			// get butget category_id
-			$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
-			$category 		= new Category( $db, $category_name );
-			$category_id	= $category->getCategoryId();
+			if ( isset( $this->category ) && !empty( $this->category ) ){
+
+				$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
+				$category 		= new Category( $db, $category_name );
+				$category_id	= !empty( $category->getCategoryId() ) ? $category->getCategoryId() : "";
+			}
 
 			// pending status by default
 			$status_id	= 1;	
@@ -97,17 +100,19 @@ include_once 'category.php';
 		    // execute query
 		    $stmt2->execute();
 
-			// If both statements are successful, consolidate the transaction. En caso contrario, revertirla
+			// If both statements are successful, consolidate the transaction. Otherwise, reverse it.
 			if( $stmt1 && $stmt2 ) {
+
 			     $this->conn->commit();
 			     echo "Consolidated transaction.<br />";
 			     return true;
+			     
 			} else {
+
 			     $this->conn->rollback();
 			     echo "Reverted transaction.<br />";
 			     return false;
 			}
-		
 		}
 
 		/**

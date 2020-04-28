@@ -7,8 +7,9 @@
 	header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
 	  
 	// include database and budget files
-	include_once '../config/database.php';
 	include_once '../objects/budget.php';
+	include_once '../config/database.php';
+	include_once '../config/core.php';
 	
 	// get service action
 	$uri 	= $_SERVER['REQUEST_URI'];
@@ -26,7 +27,7 @@
 	$data = json_decode( file_get_contents( "php://input" ) );
 
 	// set ID property of budget to be edited
-	$budget->id = $data->budget_id;
+	isset( $data ) ? $budget->id = $data->budget_id : '';
 	
 	/**
 	 * Modify a pending budget request
@@ -105,6 +106,19 @@
 		    // tell the user
 		    echo json_encode(array("message" => "Unable to discard budget."));
 		}
+
+	/**
+	 * Request budget action
+	 */
+	} elseif ( $action == "update.php" || $action == "" ){
+		
+		$update['message'] 	= "Please choose one of the following options and enter at least budget_id: ";
+		$update['update'] 	= "{$home_url}budget/update.php/update";
+		$update['post'] 	= "{$home_url}budget/update.php/post";
+		$update['discard'] 	= "{$home_url}budget/update.php/discard";
+
+		echo json_encode( $update );
 	}
+
 
 ?>

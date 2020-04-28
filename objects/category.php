@@ -61,19 +61,14 @@
 					if ( $this->create() ) {
 
 						$res = $this->readOne();
-						$id  = $res['id'];
-					
-						return 	$id;
+						return 	$res['id'];
 					}
-
 				}
 
 			} else {
 
-				return 8; // Other works.
-
+				return false; // Other works.
 			}
-
         }
 
 
