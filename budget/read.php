@@ -1,44 +1,17 @@
 <?php
 
-	// required headers
-	header( "Access-Control-Allow-Origin: *" );
-	header( "Content-Type: application/json; charset=UTF-8" );
-
-	// include database and budget file
 	include_once '../config/core.php';
-	include_once '../config/database.php';
-	include_once '../objects/budget.php';
-	include_once '../shared/utilities.php';
-	
-	// utilities
-	$utilities = new Utilities();
 
-	// instantiate database and budget object
-	$database 	= new Database();
-	$db 		= $database->getConnection();
-	  
-	// initialize object
-	$budget = new Budget( $db );
-
-	// get posted data
-	$data = json_decode( file_get_contents( "php://input" ) );
-	
-	if ( !empty( $data->email ) ) {
-		
-		$budget->email = $data->email;
-	}
+	if ( !empty( $data->email ) )  $budget->email = $data->email;
 
 	// query read budget records
 	$read = $budget->readPaging( $from_record_num, $records_per_page );
 
-	// check if more than 0 record found
 	if( $read && $read->rowCount() > 0 ){
 	  
-	    // budgets array
 	    $budgets 			= array();
 	    $budgets["records"] = array();
 	  
-	    // retrieve budgets table content
 	    while( $row = $read->fetch( PDO::FETCH_ASSOC ) ){
 
 	        extract( $row );
@@ -46,14 +19,13 @@
 	        $budget_item = array(
 	            "id" 			=> $id,
 	            "email" 		=> $user_email,
-	            "description" 	=> html_entity_decode($description),
+	            "description" 	=> html_entity_decode( $description ),
 	            "category_name" => $category_name,
 	            "status_name" 	=> $status_name,
 	            "created"		=> $created
 	        );
 	  
 	        array_push( $budgets["records"], $budget_item );
-
 	    }
 
         // include paging
@@ -62,12 +34,11 @@
 	    $paging 			= $utilities->getPaging( $page, $total_rows, $records_per_page, $page_url );
 	    $budgets["paging"] 	= $paging;
   
-	    // 200 OK - show budgets data in json format
-	    $utilities->statusCodes( $_200, $budgets );
+	    $utilities->completeStatusCode( $_200, $budgets );
 
 	} else{
   		
-  		// tell the user no budget found
-	    $utilities->statusCodes( $_404, array( "message" => "No budget request has been found.") );
-
+	    $utilities->completeStatusCode( $_404, array( "message" => "No budget request has been found.") );
 	}
+
+?>

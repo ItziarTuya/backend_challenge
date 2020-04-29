@@ -44,7 +44,7 @@
         }
 
 
-        public function statusCodes( $code, $message ) {
+        public function completeStatusCode( $code, $message ) {
 
             // set response code 
             http_response_code( $code );

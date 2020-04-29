@@ -33,16 +33,14 @@ include_once 'category.php';
 		function create(){
 
 			// instantiate database and user object
-			$database 	= new Database();
-			$db 		= $database->getConnection();
 			$email 		= filter_var( $this->email, FILTER_SANITIZE_EMAIL );
 			$params		= array (
 				'email' 	=> $email,
 		    	'phone'		=> filter_var( $this->phone, FILTER_SANITIZE_STRING ),
 		    	'address'	=> filter_var( $this->address, FILTER_SANITIZE_STRING ) 
 		    );
-			$user 		= new User( $db, $params );
-			$res 		= $user->readOne( filter_var( $this->email, FILTER_SANITIZE_EMAIL ) );
+			$user 		= new User( $this->conn, $params );
+			$res 		= $user->readOne( $email );
 
 			// Transaction init
 			$this->conn->beginTransaction();
@@ -66,7 +64,7 @@ include_once 'category.php';
 			if ( isset( $this->category ) && !empty( $this->category ) ){
 
 				$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
-				$category 		= new Category( $db, $category_name );
+				$category 		= new Category( $this->conn, $category_name );
 				$category_id	= !empty( $category->getCategoryId() ) ? $category->getCategoryId() : "";
 			}
 
@@ -331,7 +329,7 @@ include_once 'category.php';
 	    // Count rows for paging budgets
 	    public function count( $email = null){
 
-	    	
+
 	        $query = "SELECT COUNT(*) as total_rows FROM {$this->table}";
 	      
 	    	$res = false;
