@@ -1,33 +1,29 @@
 <?php
 
-    class Database{
-      
-        // database credentials
-        private $host       = "localhost";
-        private $db_name    = "habitissimo_api_db";
-        private $username   = "root";
-        private $password   = "";
-        public  $conn;
-      
+class Database {
 
-        // get the database connection
-        public function getConnection(){
-      
-            $this->conn = null;
-      
-            try{
+    // database credentials
+    private $host = "localhost";
+    private $db_name = "habitissimo_api_db";
+    private $username = "root";
+    private $password = "";
+    public $conn;
 
-                $this->conn = new PDO ( "mysql:host=" . $this->host . ";dbname=" . $this->db_name, $this->username, $this->password );
-                $this->conn->exec( "set names utf8" );
+    // get the database connection
+    public function getConnection() {
 
-            }catch( PDOException $exception ){
+        $this->conn = null;
 
-                echo "Connection error: " . $exception->getMessage();
+        try {
 
-            }
-      
-            return $this->conn;
+            $this->conn = new PDO("mysql:host=" . $this->host . ";dbname=" . $this->db_name, $this->username, $this->password);
+            $this->conn->exec("set names utf8");
+        } catch (PDOException $exception) {
 
+            echo "Connection error: " . $exception->getMessage();
         }
+
+        return $this->conn;
     }
-?>
+
+}

@@ -1,79 +1,76 @@
-<?php 
+<?php
 
 include_once 'user.php';
 include_once 'category.php';
 
-	class Budget {
+class Budget {
 
-		// database connection and table name
-	    private $conn;
-	    private $table = "budgets";
-	  
-	    // object properties
-	    public $id;
-	    public $title;
-	    public $description;
-	    public $category_id;
-	    public $category_name;
-	    public $user_id;
-	    public $user_name;
-	    public $status_id;
-	    public $status_name;
-	    public $created;
-	  
-	    // constructor with $db as database connection
-	    public function __construct( $db ){
-	        $this->conn = $db;
-	    }
+    // database connection and table name
+    private $conn;
+    private $table = "budgets";
+    // object properties
+    public $id;
+    public $title;
+    public $description;
+    public $category_id;
+    public $category_name;
+    public $user_id;
+    public $user_name;
+    public $status_id;
+    public $status_name;
+    public $created;
 
-		
-		/**
-		 *  CREATE budget
-		 */
-		function create(){
+    // constructor with $db as database connection
+    public function __construct($db) {
+        $this->conn = $db;
+    }
 
-			// instantiate database and user object
-			$email 		= filter_var( $this->email, FILTER_SANITIZE_EMAIL );
-			$params		= array (
-				'email' 	=> $email,
-		    	'phone'		=> filter_var( $this->phone, FILTER_SANITIZE_STRING ),
-		    	'address'	=> filter_var( $this->address, FILTER_SANITIZE_STRING ) 
-		    );
-			$user 		= new User( $this->conn, $params );
-			$res 		= $user->readOne( $email );
+    /**
+     *  CREATE budget
+     */
+    function create() {
 
-			// Transaction init
-			$this->conn->beginTransaction();
+        // instantiate database and user object
+        $email = filter_var($this->email, FILTER_SANITIZE_EMAIL);
+        $params = array(
+            'email' => $email,
+            'phone' => filter_var($this->phone, FILTER_SANITIZE_STRING),
+            'address' => filter_var($this->address, FILTER_SANITIZE_STRING)
+        );
+        $user = new User($this->conn, $params);
+        $res = $user->readOne($email);
 
-			// get budget user_id
-			if ( !$res ){
+        // Transaction init
+        $this->conn->beginTransaction();
 
-				// create new user
-				$stmt1 		= $user->create();
-				$stmt 		= $user->readOne( $email );
+        // get budget user_id
+        if (!$res) {
 
-			} else {
-				
-				// update old user
-				$stmt1 = $user->update( $res['id'] );
-			}
+            // create new user
+            $stmt1 = $user->create();
+            $stmt = $user->readOne($email);
+        } else {
 
-			$user_id = $res['id'];
+            // update old user
+            $stmt1 = $user->update($res['id']);
+        }
 
-			// get butget category_id
-			if ( isset( $this->category ) && !empty( $this->category ) ){
+        $user_id = $res['id'];
 
-				$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
-				$category 		= new Category( $this->conn, $category_name );
-				$category_id	= !empty( $category->getCategoryId() ) ? $category->getCategoryId() : "";
-			}
+        // get butget category_id
+        if (isset($this->category) && !empty($this->category)) {
 
-			// pending status by default
-			$status_id	= 1;	
-			$created 	= date('Y-m-d H:i:s');
+            $category_name = strtolower(filter_var($this->category, FILTER_SANITIZE_STRING));
+            $category = new Category($this->conn, $category_name);
+            $category_id = !empty($category->getCategoryId()) ? $category->getCategoryId() : "";
+        }
 
-			// insert new budget
-			$query2 = "INSERT INTO {$this->table} SET 
+        // pending status by default
+        $status_id = 1;
+        $created = date('Y-m-d H:i:s');
+
+        // insert new budget
+        $query2 = "INSERT INTO {$this->table} SET 
 			          		title=:title, 
 			          		description=:description, 
 			          		category_id=:category_id, 
@@ -81,197 +78,187 @@ include_once 'category.php';
 			          		status_id=:status_id, 
 			          		created=:created ";
 
-			$stmt2 = $this->conn->prepare($query2);
+        $stmt2 = $this->conn->prepare($query2);
 
-		    // sanitize
-		    $this->title 		= filter_var( $this->title, FILTER_SANITIZE_STRING );
-		    $this->description 	= filter_var( $this->description, FILTER_SANITIZE_STRING );
-		  
-		    // bind values
-		    $stmt2->bindParam( ":title", $this->title );
-		    $stmt2->bindParam( ":description", $this->description );
-		    $stmt2->bindParam( ":category_id", $category_id );
-		    $stmt2->bindParam( ":user_id", $user_id );
-		    $stmt2->bindParam( ":status_id", $status_id );
-		    $stmt2->bindParam( ":created", $created );
+        // sanitize
+        $this->title = filter_var($this->title, FILTER_SANITIZE_STRING);
+        $this->description = filter_var($this->description, FILTER_SANITIZE_STRING);
 
-		    // execute query
-		    $stmt2->execute();
+        // bind values
+        $stmt2->bindParam(":title", $this->title);
+        $stmt2->bindParam(":description", $this->description);
+        $stmt2->bindParam(":category_id", $category_id);
+        $stmt2->bindParam(":user_id", $user_id);
+        $stmt2->bindParam(":status_id", $status_id);
+        $stmt2->bindParam(":created", $created);
 
-			// If both statements are successful, consolidate the transaction. Otherwise, reverse it.
-			if( $stmt1 && $stmt2 ) {
+        // execute query
+        $stmt2->execute();
 
-			     $this->conn->commit();
-			     echo "Consolidated transaction.<br />";
-			     return true;
+        // If both statements are successful, consolidate the transaction. Otherwise, reverse it.
+        if ($stmt1 && $stmt2) {
 
-			} else {
+            $this->conn->commit();
+            echo "Consolidated transaction.<br />";
+            return true;
+        } else {
 
-			     $this->conn->rollback();
-			     echo "Reverted transaction.<br />";
-			     return false;
-			}
-		}
+            $this->conn->rollback();
+            echo "Reverted transaction.<br />";
+            return false;
+        }
+    }
 
-		/**
-		 * UPDATE budget
-		 */
-		function update() {
+    /**
+     * UPDATE budget
+     */
+    function update() {
 
-		// Check if budget exists and is alowed to be modified .
-		$id 	= filter_var( $this->id, FILTER_VALIDATE_INT );
-		$budget = $this->readOne( $id );
+        // Check if budget exists and is alowed to be modified .
+        $id = filter_var($this->id, FILTER_VALIDATE_INT);
+        $budget = $this->readOne($id);
 
-		if ( $budget && $budget['status_id'] == 1 ) {
+        if ($budget && $budget['status_id'] == 1) {
 
-			// get butget category_id
-			$database 		= new Database();
-			$db 			= $database->getConnection();
-			$category_name  = strtolower( filter_var( $this->category, FILTER_SANITIZE_STRING ) );
-			$category 		= new Category( $db, $category_name );
-			$category_id	= $category->getCategoryId();
+            // get butget category_id
+            $database = new Database();
+            $db = $database->getConnection();
+            $category_name = strtolower(filter_var($this->category, FILTER_SANITIZE_STRING));
+            $category = new Category($db, $category_name);
+            $category_id = $category->getCategoryId();
 
-			// update query
-		        $query = "UPDATE {$this->table} SET
+            // update query
+            $query = "UPDATE {$this->table} SET
 		                    title 		= :title,
 		                    description = :description,
 		                    category_id = :category_id
 		                WHERE
 		                    id = :id";
-		      
-		        // prepare query statement
-		        $stmt = $this->conn->prepare($query);
-		      
-		        // sanitize
-			    $this->title 		= filter_var( $this->title, 		FILTER_SANITIZE_STRING );
-			    $this->description 	= filter_var( $this->description, 	FILTER_SANITIZE_STRING );
-		      
-		        // bind new values
-		        $stmt->bindParam( ':title', 		$this->title );
-		        $stmt->bindParam( ':description', 	$this->description );
-		        $stmt->bindParam( ':category_id', 	$category_id);
-		        $stmt->bindParam( ':id', 			$id );
-		      
-		        // execute the query
-		        if($stmt->execute()){
-		            return true;
-		        }
-		      
-		        return false;
 
-	        // The budget could not be updated.
-			} else { 
-				return false;
-			}
+            // prepare query statement
+            $stmt = $this->conn->prepare($query);
 
-	    }
+            // sanitize
+            $this->title = filter_var($this->title, FILTER_SANITIZE_STRING);
+            $this->description = filter_var($this->description, FILTER_SANITIZE_STRING);
 
+            // bind new values
+            $stmt->bindParam(':title', $this->title);
+            $stmt->bindParam(':description', $this->description);
+            $stmt->bindParam(':category_id', $category_id);
+            $stmt->bindParam(':id', $id);
 
-    	/**
-		 *  READ one budget
-		 */
-    	function readOne( $id ){
-      
-	        // query to read single record
-	        $query = " SELECT * FROM {$this->table} WHERE id = :id " ;
-	      
-	        // prepare query statement
-	        $stmt = $this->conn->prepare( $query );
+            // execute the query
+            if ($stmt->execute()) {
+                return true;
+            }
 
-	        // bind budget id 
-	        $stmt->bindParam(":id", $id );
-	      
-	        // execute query
+            return false;
 
-	        if ($stmt->execute()) {
-	        	return $stmt->fetch();
-	        }
+            // The budget could not be updated.
+        } else {
+            return false;
+        }
+    }
 
-	        return false;
+    /**
+     *  READ one budget
+     */
+    function readOne($id) {
 
+        // query to read single record
+        $query = " SELECT * FROM {$this->table} WHERE id = :id ";
+
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
+
+        // bind budget id 
+        $stmt->bindParam(":id", $id);
+
+        // execute query
+
+        if ($stmt->execute()) {
+            return $stmt->fetch();
         }
 
+        return false;
+    }
 
-        /**
-         *  Post a pending budget request
-         */
-        function post(){
+    /**
+     *  Post a pending budget request
+     */
+    function post() {
 
-			// check if budget exists and is alowed to be modified .
-			$id 		= filter_var( $this->id, FILTER_VALIDATE_INT );
-			$budget 	= $this->readOne( $id );
-			$published 	= 2;
+        // check if budget exists and is alowed to be modified .
+        $id = filter_var($this->id, FILTER_VALIDATE_INT);
+        $budget = $this->readOne($id);
+        $published = 2;
 
-			if ( $budget 
-					&& $budget['status_id'] == 1
-					&& !empty( $budget['title'] )
-					&& !empty( $budget['description'] ) ) {
+        if ($budget && $budget['status_id'] == 1 && !empty($budget['title']) && !empty($budget['description'])) {
 
-				$query = " UPDATE {$this->table} SET
+            $query = " UPDATE {$this->table} SET
 								status_id = :status_id
-							WHERE id = :id " ;
+							WHERE id = :id ";
 
-				$stmt = $this->conn->prepare( $query );
+            $stmt = $this->conn->prepare($query);
 
-				$stmt->bindParam( ":status_id", $published );
-				$stmt->bindParam( ':id', 		$id );
+            $stmt->bindParam(":status_id", $published);
+            $stmt->bindParam(':id', $id);
 
-				if ( $stmt->execute() ){
-					return true;
-				}
+            if ($stmt->execute()) {
+                return true;
+            }
 
-				return false;
+            return false;
 
-			// the budget does not meet the requirements to be published.
-			} else {
-				return false;
-			}
+            // the budget does not meet the requirements to be published.
+        } else {
+            return false;
         }
+    }
 
+    /**
+     *  Discard a published or pending budget request
+     */
+    function discard() {
 
-        /**
-         *  Discard a published or pending budget request
-         */
-        function discard(){
+        // check if budget exists and is alowed to be modified .
+        $id = filter_var($this->id, FILTER_VALIDATE_INT);
+        $budget = $this->readOne($id);
+        $discarded = 3;
 
-			// check if budget exists and is alowed to be modified .
-			$id 		= filter_var( $this->id, FILTER_VALIDATE_INT );
-			$budget 	= $this->readOne( $id );
-			$discarded 	= 3;
+        if ($budget && ( $budget['status_id'] != $discarded )) {
 
-			if ( $budget && ( $budget['status_id'] != $discarded ) ) {
-
-				$query = " UPDATE {$this->table} SET
+            $query = " UPDATE {$this->table} SET
 								status_id = :status_id
-							WHERE id = :id " ;
+							WHERE id = :id ";
 
-				$stmt = $this->conn->prepare( $query );
+            $stmt = $this->conn->prepare($query);
 
-				$stmt->bindParam( ":status_id", $discarded );
-				$stmt->bindParam( ':id', 		$id );
+            $stmt->bindParam(":status_id", $discarded);
+            $stmt->bindParam(':id', $id);
 
-				if ( $stmt->execute() ){
-					return true;
-				}
+            if ($stmt->execute()) {
+                return true;
+            }
 
-				return false;
+            return false;
 
-			// the budget does not meet the requirements to be discarded.
-			} else {
-				return false;
-			}
+            // the budget does not meet the requirements to be discarded.
+        } else {
+            return false;
         }
+    }
 
+    /**
+     *  READ budget with pagination
+     */
+    function readPaging($from_record_num, $records_per_page) {
 
-		/**
-		 *  READ budget with pagination
-		 */
-		function readPaging( $from_record_num, $records_per_page ){
+        $res = false;
 
-			$res = false;
-		  
-		    // select all query
-		    $query = "SELECT 
+        // select all query
+        $query = "SELECT 
 		    			b.id, 
 	    				b.title, 
 	    				b.description, 
@@ -287,72 +274,71 @@ include_once 'category.php';
 	                LEFT JOIN users u 		ON b.user_id = u.id
 	                LEFT JOIN status s 		ON b.status_id = s.id ";
 
-		    if ( isset( $this->email ) ) {
+        if (isset($this->email)) {
 
-		    	$database 	= new Database();
-				$db 		= $database->getConnection();
-				$user 		= new User( $db );
-				$res 		= $user->readOne( filter_var( $this->email, FILTER_SANITIZE_EMAIL ) );
+            $database = new Database();
+            $db = $database->getConnection();
+            $user = new User($db);
+            $res = $user->readOne(filter_var($this->email, FILTER_SANITIZE_EMAIL));
 
-				if ( $res ){
+            if ($res) {
 
-		    		$query .= " WHERE b.user_id = :user_id ";
-	    		
-	    		// The email doesn't exist in db.
-	    		} else{
+                $query .= " WHERE b.user_id = :user_id ";
 
-	    			return false;
-	    		}
-		    }
+                // The email doesn't exist in db.
+            } else {
 
-			$query .= " ORDER BY b.created DESC
+                return false;
+            }
+        }
+
+        $query .= " ORDER BY b.created DESC
 						LIMIT $from_record_num, $records_per_page ";
-		  
-		    // prepare query statement
-		    $stmt = $this->conn->prepare( $query );
-        
-		    if ( $res ){
 
-		    	$stmt->bindParam( ":user_id", $res["id"] );
-			}
-		  
-		    // execute query
-		    if ( $stmt->execute() ){
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
 
-		   		return $stmt;
-		  	}
-		    
-		  	return false;
-		}
+        if ($res) {
+
+            $stmt->bindParam(":user_id", $res["id"]);
+        }
+
+        // execute query
+        if ($stmt->execute()) {
+
+            return $stmt;
+        }
+
+        return false;
+    }
+
+    // Count rows for paging budgets
+    public function count($email = null) {
 
 
-	    // Count rows for paging budgets
-	    public function count( $email = null){
+        $query = "SELECT COUNT(*) as total_rows FROM {$this->table}";
 
+        $res = false;
+        if (isset($this->email)) {
 
-	        $query = "SELECT COUNT(*) as total_rows FROM {$this->table}";
-	      
-	    	$res = false;
-  		    if ( isset( $this->email ) ) {
+            $database = new Database();
+            $db = $database->getConnection();
+            $user = new User($db);
+            $res = $user->readOne(filter_var($this->email, FILTER_SANITIZE_EMAIL));
 
-		    	$database 	= new Database();
-				$db 		= $database->getConnection();
-				$user 		= new User( $db );
-				$res 		= $user->readOne( filter_var( $this->email, FILTER_SANITIZE_EMAIL ) );
+            if ($res)
+                $query .= " WHERE user_id = :user_id ";
+        }
 
-				if ( $res ) $query .= " WHERE user_id = :user_id ";
-	    	}
+        $stmt = $this->conn->prepare($query);
 
-	        $stmt = $this->conn->prepare( $query );
+        if ($res)
+            $stmt->bindParam(":user_id", $res["id"]);
 
-	        if ( $res ) $stmt->bindParam( ":user_id", $res["id"] );
+        $stmt->execute();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-	        $stmt->execute();
-	        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row['total_rows'];
+    }
 
-	        return $row['total_rows'];
-	    }
-
-	}
-
-?>
+}
