@@ -129,7 +129,7 @@ class Budget {
 
             // update query
             $query = "UPDATE {$this->table} SET
-		                    title 		= :title,
+		                    title = :title,
 		                    description = :description,
 		                    category_id = :category_id
 		                WHERE
@@ -259,16 +259,16 @@ class Budget {
 
         // select all query
         $query = "SELECT 
-		    			b.id, 
-	    				b.title, 
-	    				b.description, 
-	    				b.category_id, 
-	    				c.name as category_name, 
-	    				b.user_id, 
-	    				u.email as user_email, 
-	    				b.status_id, 
-	    				s.name as status_name, 
-	    				b.created
+                        b.id, 
+                        b.title, 
+                        b.description, 
+                        b.category_id, 
+                        c.name as category_name, 
+                        b.user_id, 
+                        u.email as user_email, 
+                        b.status_id, 
+                        s.name as status_name, 
+                        b.created
 		            FROM {$this->table} b
 	                LEFT JOIN categories c 	ON b.category_id = c.id
 	                LEFT JOIN users u 		ON b.user_id = u.id
